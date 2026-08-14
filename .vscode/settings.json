@@ -1,0 +1,5 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+  "dbt.dbtPythonPathOverride": "C:\\Projects\\Hackstories_project\\.venv\\bin\\python"
+
+}
