@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: int_posts
+    description: >
+      Enriches staged posts with extracted domain, date parts (year/month), 
+      and bucketed rank categories for points and comments. One row per post.
+    columns:
+      - name: id
+        description: "Unique identifier for the post."
+        tests:
+          - unique
+          - not_null
+
+      - name: title
+        description: "Post title as submitted to Hacker News."
+
+      - name: url
+        description: "Original post URL, or 'url not found' if the post has no link (e.g. Ask HN posts)."
+
+      - name: domain
+        description: "Domain extracted from the URL (text between https:// and the first /), or 'url not found' if no URL exists."
+
+      - name: author
+        description: "Username of the post's author."
+
+      - name: created_at
+        description: "Timestamp the post was submitted."
+
+      - name: year
+        description: "Year extracted from created_at."
+
+      - name: month
+        description: "Month extracted from created_at."
+
+      - name: points
+        description: "Raw upvote/points count for the post."
+
+      - name: points_rank
+        description: "Bucketed range for points: below 1000, above 1000 points, above 2000 points, above 3000 points, above 4400 points."
+        tests:
+          - accepted_values:
+              values:
+                - 'below 1000'
+                - 'above 1000 points'
+                - 'above 2000 points'
+                - 'above 3000 points'
+                - 'above 4400 ponts'
+
+      - name: num_comments
+        description: "Raw comment count for the post."
+
+      - name: comments_rank
+        description: "Bucketed range for comment count: below 500, 500-1000, 1000-2000, 2000-3000, above 3000."
+        tests:
+          - accepted_values:
+              values:
+                - 'below 500 comments'
+                - '500 - 1000 comments'
+                - '1000 - 2000 comments'
+                - '2000 - 3000 comments'
+                - 'above 3000 comments'

@@ -1,3 +1,49 @@
-.vscode/
+# Python
+__pycache__/
+*.pyc
+
+# dbt
+target/
+dbt_packages/
 logs/
-*.log
+
+# Airflow / AWS CLI
+airflow/aws/
+airflow/awscliv2.zip
+airflow/tmp/
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+*.tfvars
+
+# Data outputs
+*.csv
+
+# IDE
+.vscode/
+
+# AWS CLI installer (accidentally installed inside project folder)
+airflow/aws/
+airflow/awscliv2.zip
+
+# Leftover tmp file
+airflow/tmp/
+
+Hackstories-API-Pipeline/airflow/aws/
+Hackstories-API-Pipeline/airflow/logs/
+Hackstories-API-Pipeline/airflow/plugins/
+Hackstories-API-Pipeline/airflow/tmp/
+Hackstories-API-Pipeline/airflow/*.zip/
+Hackstories-API-Pipeline/airflow/aws/
+
+
+.env
+*.env
+configuration.conf
+
+# Ignore archive files
+*.zip
+*.tar.gz

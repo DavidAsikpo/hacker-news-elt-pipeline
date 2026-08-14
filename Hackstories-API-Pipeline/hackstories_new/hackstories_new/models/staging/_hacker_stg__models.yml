@@ -1,0 +1,42 @@
+version: 2
+
+models:
+   - name: hacker_stg__posts
+     columns:
+        - name: id
+          tests:
+              - not_null
+              - unique:
+                    config:
+                        severity: error
+                    
+        - name: title
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+        - name: url
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+        - name: author
+          tests:
+             - not_null:
+                    config:
+                       severity: error
+        - name: points
+          tests:
+            - not_null:
+                    config:
+                        severity: warn
+        - name: num_comments
+          tests:
+            - not_null:
+                    config:
+                        severity: warn
+        - name: created_at
+          tests:
+            - not_null:
+                   config:
+                        severity: warn
