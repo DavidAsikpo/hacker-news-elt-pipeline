@@ -44,7 +44,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.3.2}
+  image: dbt-custom:1.0 
   # build: .
   environment:
     &airflow-common-env
@@ -58,7 +58,14 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- praw boto3 configparser psycopg2-binary}
+    # --- dbt / Cosmos config ---
+    DBT_HOST: ${DBT_HOST}
+    DBT_USER: ${DBT_USER}
+    DBT_PASSWORD: ${DBT_PASSWORD}
+    DBT_DBNAME: dev
+    DBT_PROFILES_DIR: /opt/airflow/dbt
   volumes:
+    - ./hackstories_dbt:/opt/airflow/dbt
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
@@ -254,6 +261,7 @@ services:
       - bash
       - -c
       - airflow
+
 
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.

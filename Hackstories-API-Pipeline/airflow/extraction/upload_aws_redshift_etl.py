@@ -50,7 +50,8 @@ sql_create_table = sql.SQL(
                             author varchar(max),
                             created_at timestamp,
                             points int,
-                            num_comments int
+                            num_comments int,
+                            updated_at timestamp
                        
                         );"""
 ).format(table=sql.Identifier(TABLE_NAME))

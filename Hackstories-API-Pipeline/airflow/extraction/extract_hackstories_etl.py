@@ -1,11 +1,13 @@
 import requests
 import time
 import json
-import pandas
+import pandas as pd 
 import sys 
 import io
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from pathlib import Path
+import datetime 
 
 
 
@@ -16,6 +18,7 @@ if len(sys.argv) < 2:
 
 output_name = sys.argv[1]
 FILENAME = f"{output_name}.csv"
+FILEPATH = Path(rf"C:/Projects/Hackstories_project/Hackstories-API-Pipeline/airflow/tmp/{FILENAME}")
 
 # Calculate the timestamp for 1000 days ago
 thousand_days_ago = int(time.time()) - (1000 * 24 * 60 * 60)
@@ -91,19 +94,60 @@ def fetch_hackstories():
 
         time.sleep(1)  # Sleep for 1 second to avoid hitting the API too quickly
 
-    posts_df = pandas.DataFrame(posts)
+    posts_df = pd.DataFrame(posts)
     
     print(f"Processed {len(posts)} posts successfully!")
+
+    return posts_df
+
+
+def compare_data(df:pd.DataFrame):
+
+    df['id'] = df['id'].astype(str)
+
+    try: 
+        old_df = pd.read_csv(FILEPATH, dtype={'id':'str'})
+    except FileNotFoundError as e:
+        df.to_csv(FILEPATH, index=False)
+        return
+
     
-    posts_df.to_csv(f"/tmp/{FILENAME}", index=False)
+    old_data_indexed = old_df.set_index("id")
+    new_data_indexed = df.set_index("id")
+    
 
-    print(f"file saved successfully!")
+    compare_cols = [c for c in df.columns if c != 'id' and c != 'updated_at' ]
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    results = []
+    number_changed = 0
+    number_added = 0
 
+    for post_id, new_row in new_data_indexed.iterrows():
+        if post_id not in old_data_indexed.index:
+            N_row = new_row.to_dict()
+            N_row['id'] = post_id
+            N_row['updated_at'] = pd.NA
+            results.append(N_row)
+            number_added = number_added + 1
+        else:
+           old_row = old_data_indexed.loc[post_id]
+           changed = any(str(old_row.get(col)) != str(new_row.get(col)) for col in compare_cols)
+           if changed:
+               number_changed = number_changed+ 1
+           O_row = new_row.to_dict()
+           O_row['id'] = post_id
+           O_row['updated_at'] = now if changed else old_row.get('updated_at', pd.NA)
+           results.append(O_row)
+    print(f'{number_changed} rows updated')
+    print(f'{number_added} rows added')
+
+    data = pd.DataFrame(results)
+    data.to_csv(FILEPATH, index=False)
 
 
 if __name__ == "__main__":
     #run pipeline
-    fetch_hackstories()
+    compare_data(fetch_hackstories())
 
 
 

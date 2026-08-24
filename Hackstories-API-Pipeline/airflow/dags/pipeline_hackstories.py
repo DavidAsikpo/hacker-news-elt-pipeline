@@ -3,6 +3,8 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta, datetime
+from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos.profiles import RedshiftUserPasswordProfileMapping
 
 """
 DAG to extract Reddit data, load into AWS S3, and copy to AWS Redshift
@@ -15,9 +17,23 @@ output_name = datetime.now().strftime("%Y%m%d")
 # Run our DAG daily and ensures DAG run will kick off
 # once Airflow is started, as it will try to "catch up"
 schedule_interval = "@daily"
-start_date = datetime(2026, 7, 24) # Start date for DAG run. This will be used to "catch up" and run DAG for each day since this date
+start_date = datetime(2026, 24, 24) # Start date for DAG run. This will be used to "catch up" and run DAG for each day since this date
 
 default_args = {"owner": "David", "depends_on_past": False, "retries": 1}
+
+profile_config = ProfileConfig(
+    profile_name="hackstories_dbt",
+    target_name="dev",
+    profile_mapping=RedshiftUserPasswordProfileMapping(
+        conn_id="redshift_dbt",  # set this up as an Airflow Connection
+        profile_args={"schema": "public"},
+    ),
+)
+
+execution_config = ExecutionConfig(
+    execution_mode = "virtualenv",
+    venv_dbt_path = "/opt/dbt_venv/bin/dbt"
+)
 
 with DAG(
     dag_id="elt_hackstories_pipeline",
@@ -51,6 +67,13 @@ with DAG(
     )
     copy_to_redshift.doc_md = "Copy S3 CSV file to Redshift table"
 
+    dbt_transform = DbtTaskGroup(
+        group_id="dbt_transform",
+        project_config=ProjectConfig("/opt/airflow/dbt"),
+        profile_config=profile_config,
+        execution_config=execution_config,
+    )
+
     download_from_redshift = BashOperator(
         task_id="download_from_redshift",
         bash_command=f"python /opt/airflow/extraction/download_redshift_to_csv.py {output_name}",
@@ -59,15 +82,6 @@ with DAG(
     download_from_redshift.doc_md = "Download data from Redshift table"
 
 
-    dbt_build = BashOperator(
-        task_id="dbt_build",
-        bash_command=(
-            f"cd C:\Projects\Hackstories_project\Hackstories-API-Pipeline\hackstories_new\hackstories_new"
-            f"dbt build"
-        ),
-    )
+    
 
-
-  
-
-extract_hackstories_data >> upload_to_s3 >> copy_to_redshift >> download_from_redshift
+extract_hackstories_data >> upload_to_s3 >> copy_to_redshift >> dbt_transform >> download_from_redshift

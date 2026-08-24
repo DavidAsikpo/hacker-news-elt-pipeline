@@ -20,7 +20,7 @@ PASSWORD = parser.get("aws_config", "redshift_password")
 HOST = parser.get("aws_config", "redshift_hostname")
 PORT = parser.get("aws_config", "redshift_port")
 DATABASE = parser.get("aws_config", "redshift_database")
-TABLE_NAME = parser.get("aws_config", "table_name")
+TABLE_NAME = 'fct_posts'
 
 # TODO Improve error handling
 def connect_to_redshift():
@@ -45,7 +45,7 @@ def download_redshift_data(rs_conn):
         result = cur.fetchall()
         headers = [col[0] for col in cur.description]
         result.insert(0, tuple(headers))
-        fp = open("/tmp/redshift_output.csv", "w")
+        fp = open("/tmp/redshift_fct_posts.csv", "w")
         myFile = csv.writer(fp)
         myFile.writerows(result)
         fp.close()
