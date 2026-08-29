@@ -47,3 +47,20 @@ configuration.conf
 # Ignore archive files
 *.zip
 *.tar.gz
+Hackstories-API-Pipeline\airflow\data_staging\
+
+pyproject.toml
+uv.lock
+.venv/
+
+Hackstories-API-Pipeline/hackstories_dbt/pyproject.toml
+Hackstories-API-Pipeline/hackstories_dbt/uv.lock
+
+data_staging/
+hackstories_dbt/profiles.yml
+hackstories_dbt/target/
+hackstories_dbt/dbt_packages/
+__pycache__/
+*.pyc
+.venv/
+logs/
