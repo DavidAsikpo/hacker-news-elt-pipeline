@@ -8,6 +8,7 @@ SELECT
     END AS domain,
     author,
     created_at,
+    updated_at,
     EXTRACT(YEAR FROM created_at) AS YEAR,
     EXTRACT(MONTH FROM created_at)AS MONTH,
     points,

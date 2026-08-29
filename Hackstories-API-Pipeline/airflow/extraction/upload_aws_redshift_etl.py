@@ -4,6 +4,7 @@ import psycopg2
 import sys
 from validation import validate_input
 from psycopg2 import sql
+from airflow.hooks.base import BaseHook
 
 """
 Part of DAG. Upload S3 CSV data to Redshift. Takes one argument of format YYYYMMDD. This is the name of 
@@ -19,12 +20,13 @@ parser = configparser.ConfigParser()
 parser.read(f"{script_path}/configuration.conf")
 
 # Store our configuration variables
-USERNAME = parser.get("aws_config", "redshift_username")
-PASSWORD = parser.get("aws_config", "redshift_password")
-HOST = parser.get("aws_config", "redshift_hostname")
-PORT = parser.get("aws_config", "redshift_port")
+redshift_conn = BaseHook.get_connection("redshift_dbt")
+USERNAME = redshift_conn.login
+PASSWORD = redshift_conn.password
+HOST = redshift_conn.host
+PORT = redshift_conn.port
 REDSHIFT_ROLE = parser.get("aws_config", "redshift_role")
-DATABASE = parser.get("aws_config", "redshift_database")
+DATABASE = redshift_conn.schema
 BUCKET_NAME = parser.get("aws_config", "bucket_name")
 ACCOUNT_ID = parser.get("aws_config", "account_id")
 TABLE_NAME = parser.get("aws_config", "table_name")
@@ -44,13 +46,13 @@ role_string = f"arn:aws:iam::{ACCOUNT_ID}:role/{REDSHIFT_ROLE}"
 # Create Redshift table if it doesn't exist
 sql_create_table = sql.SQL(
     """CREATE TABLE IF NOT EXISTS {table} (
-                            id varchar(255) PRIMARY KEY,
                             title varchar(max),
                             url varchar(max),
                             author varchar(max),
                             created_at timestamp,
                             points int,
                             num_comments int,
+                            id varchar(255) PRIMARY KEY,
                             updated_at timestamp
                        
                         );"""
@@ -61,7 +63,17 @@ sql_create_table = sql.SQL(
 create_temp_table = sql.SQL(
     "CREATE TEMP TABLE our_staging_table (LIKE {table});"
 ).format(table=sql.Identifier(TABLE_NAME))
-sql_copy_to_temp = f"COPY our_staging_table FROM '{file_path}' iam_role '{role_string}' IGNOREHEADER 1 DELIMITER ',' CSV TIMEFORMAT 'auto';"
+# sql_copy_to_temp = f"COPY our_staging_table FROM '{file_path}' iam_role '{role_string}' IGNOREHEADER 1 DELIMITER ',' CSV TIMEFORMAT 'auto';"
+sql_copy_to_temp = f"""
+    COPY our_staging_table
+    (title, url, author, created_at, points, num_comments, id, updated_at)
+    FROM '{file_path}'
+    IAM_ROLE '{role_string}'
+    FORMAT AS CSV
+    QUOTE AS '"'
+    IGNOREHEADER 1
+    TIMEFORMAT 'auto';
+"""
 delete_from_table = sql.SQL(
     "DELETE FROM {table} USING our_staging_table WHERE {table}.id = our_staging_table.id;"
 ).format(table=sql.Identifier(TABLE_NAME))

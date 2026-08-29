@@ -3,7 +3,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta, datetime
-from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig, ExecutionMode
 from cosmos.profiles import RedshiftUserPasswordProfileMapping
 
 """
@@ -17,7 +17,7 @@ output_name = datetime.now().strftime("%Y%m%d")
 # Run our DAG daily and ensures DAG run will kick off
 # once Airflow is started, as it will try to "catch up"
 schedule_interval = "@daily"
-start_date = datetime(2026, 24, 24) # Start date for DAG run. This will be used to "catch up" and run DAG for each day since this date
+start_date = datetime(2026, 8, 24) # Start date for DAG run. This will be used to "catch up" and run DAG for each day since this date
 
 default_args = {"owner": "David", "depends_on_past": False, "retries": 1}
 
@@ -31,8 +31,8 @@ profile_config = ProfileConfig(
 )
 
 execution_config = ExecutionConfig(
-    execution_mode = "virtualenv",
-    venv_dbt_path = "/opt/dbt_venv/bin/dbt"
+    execution_mode = ExecutionMode.LOCAL,
+    dbt_executable_path = "/opt/dbt_venv/bin/dbt"
 )
 
 with DAG(
@@ -41,7 +41,7 @@ with DAG(
     schedule_interval=schedule_interval,
     default_args=default_args,
     start_date=start_date,
-    catchup=True,
+    catchup=False,
     max_active_runs=1,
     tags=["hackstoriesETL"],
 ) as dag:

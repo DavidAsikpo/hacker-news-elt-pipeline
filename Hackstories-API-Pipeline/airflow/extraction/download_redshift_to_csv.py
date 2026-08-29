@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2 import sql
 import csv
 import sys
+from airflow.hooks.base import BaseHook
 
 """
 Download Redshift table to CSV file. Will be stored under /tmp folder.
@@ -15,12 +16,15 @@ parser = configparser.ConfigParser()
 parser.read(f"{script_path}/configuration.conf")
 
 # Store configuration variables
-USERNAME = parser.get("aws_config", "redshift_username")
-PASSWORD = parser.get("aws_config", "redshift_password")
-HOST = parser.get("aws_config", "redshift_hostname")
-PORT = parser.get("aws_config", "redshift_port")
-DATABASE = parser.get("aws_config", "redshift_database")
+redshift_conn = BaseHook.get_connection("redshift_dbt")
+USERNAME = redshift_conn.login
+PASSWORD = redshift_conn.password
+HOST = redshift_conn.host
+PORT = redshift_conn.port
+DATABASE = redshift_conn.schema
 TABLE_NAME = 'fct_posts'
+SCHEMA_NAME = 'marts'
+
 
 # TODO Improve error handling
 def connect_to_redshift():
@@ -40,12 +44,12 @@ def download_redshift_data(rs_conn):
     with rs_conn:
         cur = rs_conn.cursor()
         cur.execute(
-            sql.SQL("SELECT * FROM {table};").format(table=sql.Identifier(TABLE_NAME))
+            sql.SQL("SELECT * FROM {db}.{schema}.{table};").format(table=sql.Identifier(TABLE_NAME),db=sql.Identifier(DATABASE),schema=sql.Identifier(SCHEMA_NAME))
         )
         result = cur.fetchall()
         headers = [col[0] for col in cur.description]
         result.insert(0, tuple(headers))
-        fp = open("/tmp/redshift_fct_posts.csv", "w")
+        fp = open("/opt/airflow/data_staging/redshift_fct_posts.csv", "w")
         myFile = csv.writer(fp)
         myFile.writerows(result)
         fp.close()

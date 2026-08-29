@@ -14,6 +14,10 @@ SELECT
          ELSE CAST(created_at AS TIMESTAMP)
     END AS created_at,
     CASE WHEN 
+         CAST(updated_at AS TIMESTAMP) is NULL THEN NULL
+         ELSE CAST(updated_at AS TIMESTAMP)
+    END AS updated_at,
+    CASE WHEN 
          CAST(points AS INTEGER) is NULL THEN NULL
          ELSE CAST(points AS INTEGER)
     END AS points,

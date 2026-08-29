@@ -4,6 +4,7 @@ import configparser
 import pathlib
 import sys
 from validation import validate_input
+from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 
 """
 Part of DAG. Take hackstories data and upload to S3 bucket. Takes one command line argument of format YYYYMMDD. 
@@ -16,8 +17,7 @@ script_path = pathlib.Path(__file__).parent.resolve()
 parser.read(f"{script_path}/configuration.conf")
 BUCKET_NAME = parser.get("aws_config", "bucket_name")
 AWS_REGION = parser.get("aws_config", "aws_region")
-AWS_ACCESS_KEY_ID = parser.get("aws_config", "aws_access_key_id")
-AWS_SECRET_ACCESS_KEY = parser.get("aws_config", "aws_secret_access_key")
+
 
 # TODO Improve error handling
 try:
@@ -42,12 +42,8 @@ def main():
 def connect_to_s3():
     """Connect to S3 Instance"""
     try:
-        conn = boto3.resource(
-            "s3",
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=AWS_REGION
-        )
+        conn = AwsBaseHook(aws_conn_id="aws_default", resource_type="s3")
+        conn = conn.get_resource_type(region_name=AWS_REGION)
         return conn
     except Exception as e:
         print(f"Can't connect to S3. Error: {e}")
@@ -73,7 +69,7 @@ def create_bucket_if_not_exists(conn):
 def upload_file_to_s3(conn):
     """Upload file to S3 Bucket"""
     conn.meta.client.upload_file(
-        Filename= f"/tmp/{FILENAME}", Bucket=BUCKET_NAME, Key=KEY
+        Filename= f"/opt/airflow/data_staging/{FILENAME}", Bucket=BUCKET_NAME, Key=KEY
     )
 
 

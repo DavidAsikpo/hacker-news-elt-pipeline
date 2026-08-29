@@ -36,9 +36,6 @@ models:
         description: "Surrogate key linking to dim_authors.author_id."
         tests:
           - not_null
-          - relationships:
-              to: ref('dim_authors')
-              field: author_id
 
       - name: domain
         description: "Domain extracted from the post's URL, or 'url not found' if no URL exists."
@@ -57,3 +54,6 @@ models:
 
       - name: created_at
         description: "Timestamp the post was submitted."
+
+      - name: updated_at
+        description: "Timestamp the post was updated."

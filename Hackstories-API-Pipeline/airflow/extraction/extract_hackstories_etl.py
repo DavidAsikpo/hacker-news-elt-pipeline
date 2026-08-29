@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from pathlib import Path
 import datetime 
+import csv
 
 
 
@@ -18,7 +19,7 @@ if len(sys.argv) < 2:
 
 output_name = sys.argv[1]
 FILENAME = f"{output_name}.csv"
-FILEPATH = Path(rf"C:/Projects/Hackstories_project/Hackstories-API-Pipeline/airflow/tmp/{FILENAME}")
+FILEPATH = Path(rf"/opt/airflow/data_staging/{output_name}.csv")
 
 # Calculate the timestamp for 1000 days ago
 thousand_days_ago = int(time.time()) - (1000 * 24 * 60 * 60)
@@ -142,7 +143,7 @@ def compare_data(df:pd.DataFrame):
     print(f'{number_added} rows added')
 
     data = pd.DataFrame(results)
-    data.to_csv(FILEPATH, index=False)
+    data.to_csv(FILEPATH, index=False,quoting=csv.QUOTE_ALL,escapechar="\\")
 
 
 if __name__ == "__main__":

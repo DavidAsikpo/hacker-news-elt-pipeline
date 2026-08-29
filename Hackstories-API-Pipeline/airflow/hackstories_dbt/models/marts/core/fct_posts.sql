@@ -14,7 +14,8 @@ SELECT
     points_rank,
     num_comments,
     comments_rank,
-    created_at
+    created_at,
+    updated_at
 FROM {{ ref('int_posts') }}
 {% if is_incremental() %}
 WHERE {{ incremental_col }} > (select COALESCE(MAX({{ incremental_col }}), '1900-01-01') FROM {{ this }})

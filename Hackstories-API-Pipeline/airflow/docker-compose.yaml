@@ -46,6 +46,9 @@ x-airflow-common:
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   image: dbt-custom:1.0 
   # build: .
+  dns:
+    - 8.8.8.8
+    - 1.1.1.1
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -57,7 +60,8 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- praw boto3 configparser psycopg2-binary}
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '120'
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- praw boto3 configparser psycopg2-binary apache-airflow-providers-amazon}
     # --- dbt / Cosmos config ---
     DBT_HOST: ${DBT_HOST}
     DBT_USER: ${DBT_USER}
@@ -71,7 +75,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./extraction:/opt/airflow/extraction
     - $HOME/.aws/credentials:/home/airflow/.aws/credentials:ro
-    - ./tmp:/tmp
+    - ./data_staging:/opt/airflow/data_staging
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -181,7 +185,7 @@ services:
         function ver() {
           printf "%04d%04d%04d%04d" $${1//./ }
         }
-        airflow_version=$$(gosu airflow airflow version)
+        airflow_version=$$(airflow version)
         airflow_version_comparable=$$(ver $${airflow_version})
         min_airflow_version=2.2.0
         min_airflow_version_comparable=$$(ver $${min_airflow_version})

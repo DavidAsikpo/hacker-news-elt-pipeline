@@ -27,6 +27,9 @@ models:
       - name: created_at
         description: "Timestamp the post was submitted."
 
+      - name: updated_at
+        description: "Timestamp the post was updated."
+
       - name: year
         description: "Year extracted from created_at."
 
