@@ -8,7 +8,7 @@ This project simulates a production-grade analytics engineering workflow: pullin
 
 ## Architecture
 ![Architecture](image/untitled_Diagram.drawio.png)
-```
+
 
 ## Key Features
 
