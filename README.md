@@ -7,7 +7,7 @@ An end-to-end analytics engineering pipeline that ingests story data from the Ha
 This project simulates a production-grade analytics engineering workflow: pulling raw data from an external API, building a tested and documented transformation layer, and delivering trusted, business-ready tables for visualization — all wrapped in CI/CD and containerization.
 
 ## Architecture
-![Architecture](image/untitled_Diagram.drawio.png)
+![Architecture](image/updated_diagram.png)
 
 
 ## Key Features
